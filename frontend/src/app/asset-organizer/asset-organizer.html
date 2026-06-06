@@ -1,0 +1,320 @@
+<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 font-sans text-gray-800">
+  <header class="text-center mb-10">
+    <h1
+      class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight flex items-center justify-center gap-3">
+      <span class="material-symbols-outlined text-4xl text-blue-600">view_in_ar</span>
+      AI 3D Asset Organizer
+    </h1>
+    <p class="text-lg text-gray-500">
+      Phân loại và tổ chức nội dung dự án 3D bằng AI
+    </p>
+  </header>
+
+  <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+      <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[24px]">list_alt</span>
+        Nhập danh sách Asset / Phòng
+      </h2>
+      <button
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+        (click)="loadExample()">
+        <span class="material-symbols-outlined text-[18px]">assignment_returned</span>
+        Load ví dụ
+      </button>
+      <button
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+        (click)="toggleHistory()"
+        [disabled]="history.length === 0">
+        <span class="material-symbols-outlined text-[18px]">history</span>
+        {{ showHistory ? 'Ẩn lịch sử' : 'Xem lịch sử' }}
+      </button>
+    </div>
+    @if (showHistory) {
+    <div
+      class="mb-5 bg-gray-50/80 border border-blue-100 rounded-xl p-4 shadow-inner max-h-[350px] overflow-y-auto animate-fade-in">
+      <div class="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+        <h3 class="text-sm font-bold text-gray-700 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px] text-blue-500">manage_history</span>
+          Lịch sử phân tích gần đây
+        </h3>
+        <button (click)="showHistory = false" class="text-gray-400 hover:text-red-500 transition-colors"
+          title="Đóng panel">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      @if (history && history.length > 0) {
+      <div class="space-y-2">
+        @for (entry of history; track entry.id) {
+        <div (click)="loadFromHistory(entry)" class="p-3 rounded-lg border cursor-pointer transition-all duration-200"
+          [ngClass]="activeHistoryId === entry.id ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'">
+          <div class="flex justify-between items-start mb-1.5">
+            <span class="text-xs font-semibold text-gray-500 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">schedule</span>
+              {{ entry.createdAt | date:'short' }}
+            </span>
+            @if (activeHistoryId === entry.id) {
+            <span class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px]">visibility</span> Đang xem
+            </span>
+            }
+          </div>
+          <p class="text-sm text-gray-800 line-clamp-2 font-mono text-xs opacity-80">{{ entry.input }}</p>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="text-center py-6 text-gray-500 text-sm flex flex-col items-center gap-2">
+        <span class="material-symbols-outlined text-3xl text-gray-300">history_toggle_off</span>
+        Chưa có lịch sử nào được lưu.
+      </div>
+      }
+    </div>
+    }
+
+    <p class="text-sm text-gray-500 mb-4">
+      Nhập danh sách phòng/asset dạng text thô (cách nhau bằng dấu phẩy, xuống
+      dòng) hoặc JSON.
+    </p>
+
+    <textarea [(ngModel)]="assetInput" name="assetInput"
+      placeholder="Ví dụ: Phòng khách, phòng ngủ master, bếp, nhà tắm..." rows="8"
+      class="w-full p-4 border rounded-xl transition-all font-mono text-sm outline-none resize-y disabled:bg-gray-100 disabled:text-gray-400"
+      [ngClass]="
+        errorMessage
+          ? 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50/50'
+          : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white'
+      " [disabled]="isLoading"></textarea>
+
+    @if (errorMessage) {
+    <div class="mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+      <span class="material-symbols-outlined text-[20px]">error</span>
+      <span class="font-medium">{{ errorMessage }}</span>
+    </div>
+    }
+
+    <div class="mt-6 flex items-center gap-3">
+      <button
+        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        (click)="onSubmit()" [disabled]="isLoading">
+        @if (isLoading) {
+        <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Đang phân tích...</span>
+        } @else {
+        <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+        <span>Phân tích với AI</span>
+        }
+      </button>
+
+      <button
+        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        (click)="clearAll()" [disabled]="isLoading">
+        <span class="material-symbols-outlined text-[20px]">delete</span>
+        Xóa
+      </button>
+    </div>
+  </section>
+
+  @if (isLoading && result === null) {
+  <div
+    class="flex flex-col items-center justify-center py-12 bg-blue-50/80 rounded-2xl border border-blue-100 text-blue-700 mb-8 gap-4 shadow-inner">
+    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    <p class="font-medium animate-pulse flex items-center gap-2">
+      <span class="material-symbols-outlined animate-bounce">memory</span>
+      AI đang xử lý danh sách asset của bạn...
+    </p>
+  </div>
+  }
+
+  @if (result) {
+  <section id="result-section" class="mt-8 space-y-6">
+    <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[28px] text-green-500">task_alt</span>
+      Kết quả phân tích
+    </h2>
+
+    <div class="flex border-b border-gray-200 gap-6">
+      <button class="pb-3 px-1 border-b-2 font-medium text-sm transition-colors outline-none flex items-center gap-1"
+        [ngClass]="
+            activeTab === 'table'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          " (click)="activeTab = 'table'">
+        <span class="material-symbols-outlined text-[18px]">table_chart</span>
+        Bảng
+      </button>
+      <button class="pb-3 px-1 border-b-2 font-medium text-sm transition-colors outline-none flex items-center gap-1"
+        [ngClass]="
+            activeTab === 'json'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          " (click)="activeTab = 'json'">
+        <span class="material-symbols-outlined text-[18px]">data_object</span>
+        JSON
+      </button>
+    </div>
+
+    @if (activeTab === "table") {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+        <span class="material-symbols-outlined text-[22px] text-blue-500">folder_open</span>
+        Metadata Dự Án
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <span class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Loại dự án</span>
+          <span class="text-sm font-semibold text-gray-900">{{
+            result.metadata.project_type || "N/A"
+            }}</span>
+        </div>
+        <div class="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <span class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Tổng asset</span>
+          <span
+            class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full inline-flex items-center justify-center w-max text-xs font-bold">
+            {{ result.metadata.total_assets || 0 }}
+          </span>
+        </div>
+        <div class="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <span class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Quy mô</span>
+          <span class="text-sm font-semibold text-gray-900">{{
+            result.metadata.estimated_scale || "N/A"
+            }}</span>
+        </div>
+        <div class="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <span class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Khu vực chính</span>
+          <span class="text-sm font-semibold text-gray-900">{{
+            result.metadata.primary_zones.join(", ") ||
+            "Chưa xác
+            định"
+            }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-hidden">
+      <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[22px] text-purple-500">category</span>
+        Phân Loại Asset
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+          <thead class="bg-gray-50 border-y border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-sm font-bold text-gray-700 w-1/4">
+                Nhóm
+              </th>
+              <th class="px-4 py-3 text-sm font-bold text-gray-700">
+                Danh sách Asset (Slug)
+              </th>
+              <th class="px-4 py-3 text-sm font-bold text-gray-700 text-center w-24">
+                Số lượng
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (
+            group of objectKeys(result.classifications);
+            track group
+            ) {
+            <tr class="hover:bg-gray-50/50 transition-colors">
+              <td class="px-4 py-4 align-top">
+                <span
+                  class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-purple-100 text-purple-800">
+                  {{ group }}
+                </span>
+              </td>
+              <td class="px-4 py-4 align-top">
+                <div class="flex flex-wrap gap-2">
+                  @for (
+                  slug of result.classifications[group];
+                  track slug
+                  ) {
+                  <code
+                    class="inline-block bg-white text-gray-700 font-mono text-xs px-2.5 py-1 rounded-md border border-gray-200 shadow-sm">{{ slug }}</code>
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-4 align-top text-center font-medium text-gray-600">
+                {{ result.classifications[group].length }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-hidden">
+      <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[22px] text-blue-500">label</span>
+        Tên File / Slug Gợi Ý
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[500px]">
+          <thead class="bg-gray-50 border-y border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-sm font-bold text-gray-700 w-1/2">
+                Tên gốc
+              </th>
+              <th class="px-4 py-3 text-sm font-bold text-gray-700 w-1/2">
+                Slug đề xuất
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (name of objectKeys(result.slugs); track name) {
+            <tr class="hover:bg-gray-50/50 transition-colors">
+              <td class="px-4 py-3 text-sm text-gray-700 font-medium">
+                {{ name }}
+              </td>
+              <td class="px-4 py-3">
+                <code
+                  class="inline-block bg-gray-100 text-blue-700 font-mono text-xs px-2.5 py-1 rounded-md flex items-center w-fit gap-1">
+                        <span class="material-symbols-outlined text-[14px]"
+                          >link</span
+                        >
+                        {{ result.slugs[name] }}
+                      </code>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-sm border border-amber-200 p-6">
+      <h3 class="text-lg font-bold text-amber-900 mb-3 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[22px] text-amber-500">lightbulb</span>
+        Đề Xuất Cải Thiện
+      </h3>
+      <ol class="list-decimal list-inside space-y-2 text-sm text-amber-800 font-medium">
+        @for (tip of result.improvements; track tip) {
+        <li>{{ tip }}</li>
+        }
+      </ol>
+    </div>
+    }
+
+    @if (activeTab === "json") {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[22px] text-gray-700">code</span>
+          Raw JSON Output
+        </h3>
+        <button
+          class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200"
+          (click)="copyJson()">
+          <span class="material-symbols-outlined text-[18px]">content_copy</span>
+          Copy JSON
+        </button>
+      </div>
+      <pre
+        class="bg-gray-900 text-gray-100 p-5 rounded-xl overflow-x-auto font-mono text-sm leading-relaxed border border-gray-800 shadow-inner max-h-[600px]">{{ getResultJson() }}</pre>
+    </div>
+    }
+  </section>
+  }
+</div>

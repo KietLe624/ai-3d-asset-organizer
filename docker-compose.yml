@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  # ── Backend: Node.js + Express ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: asset-organizer-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Đổi thành GEMINI_API_KEY thật hoặc giữ USE_MOCK=true để test 
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - USE_MOCK=${USE_MOCK:-true}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend: Angular (nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: asset-organizer-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  default:
+    name: asset-organizer-network
