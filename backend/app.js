@@ -6,26 +6,21 @@ const organizeRouter = require("./routes/app.route");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── Middlewares ───────────────────────────────────────────────────────────
-app.use(
-  cors({
-    origin: "http://localhost:4200", // Angular dev server
-    methods: ["GET", "POST"],
-  }),
-);
+// Middlewares 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Request logger đơn giản ──────────────────────────────────────────────
+// Request logger 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
-// ─── Routes ───────────────────────────────────────────────────────────────
+//  Route
 app.use("/api", organizeRouter);
 
-// Health check endpoint (dùng để Docker/frontend kiểm tra server sống)
+// Health check endpoint
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
