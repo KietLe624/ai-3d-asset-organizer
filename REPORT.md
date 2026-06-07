@@ -171,9 +171,9 @@ app.use('/api', limiter);
 
 | Ưu tiên | Cải thiện | Lý do |
 |---|---|---|
-| 🔴 Cao | Thêm rate limiting | Bảo vệ API key, tránh abuse |
-| 🔴 Cao | Timeout cho Gemini call | UX tốt hơn khi AI chậm |
-| 🟡 Trung bình | Dùng `environment.ts` cho API URL | Dễ deploy nhiều môi trường |
-| 🟢 Thấp | Export kết quả ra file CSV/JSON | Tăng tính thực dụng cho workflow thực tế |
-| 🟢 Thấp | Hỗ trợ input upload file `.json` | Dễ dùng hơn khi dự án có nhiều asset |
-| 🟢 Thấp | Unit test cho `validate.js` và `gemini.js` | Đảm bảo code ổn định khi mở rộng |
+| Cao | Thêm rate limiting | Bảo vệ API key, tránh abuse |
+| Cao | Timeout cho Gemini call | UX tốt hơn khi AI chậm |
+| Trung bình | Dùng `environment.ts` cho API URL | Dễ deploy nhiều môi trường |
+| Thấp | Export kết quả ra file CSV/JSON | Tăng tính thực dụng cho workflow thực tế |
+| Thấp | Hỗ trợ input upload file `.json` | Dễ dùng hơn khi dự án có nhiều asset |
+| Thấp | Unit test cho `validate.js` và `gemini.js` | Đảm bảo code ổn định khi mở rộng |
