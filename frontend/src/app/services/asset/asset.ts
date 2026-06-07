@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 // model
 import { AssetMetadata, ApiResponse } from '../../models/asset.model';
 
@@ -11,15 +12,13 @@ import { AssetMetadata, ApiResponse } from '../../models/asset.model';
   providedIn: 'root',
 })
 export class AssetService {
-  // Endpoint backend
-  private apiUrl = 'http://localhost:3000/api';
 
   private http = inject(HttpClient);
 
   // call API
   organizeAssets(assetInput: string): Observable<ApiResponse> {
     return this.http
-      .post<ApiResponse>(`${this.apiUrl}/organize-assets`, { assetInput })
+      .post<ApiResponse>(`${environment.apiUrl}/organize-assets`, { assetInput })
       .pipe(
         catchError(this.handleError)
       );
