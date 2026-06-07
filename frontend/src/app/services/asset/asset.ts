@@ -18,7 +18,7 @@ export class AssetService {
   // call API
   organizeAssets(assetInput: string): Observable<ApiResponse> {
     return this.http
-      .post<ApiResponse>(`${environment.apiUrl}/organize-assets`, { assetInput })
+      .post<ApiResponse>(`${environment.apiUrl}/api/organize-assets`, { assetInput })
       .pipe(
         catchError(this.handleError)
       );
